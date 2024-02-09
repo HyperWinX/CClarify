@@ -2,6 +2,9 @@
 
 int main(){
 	GLOBAL_INIT();
-	int t;
-	ASSIGN_VAL(t, 5);
+	Clarifier clar;
+	int dupped = dup(fileno(stdout));
+	init_loggerd(&clar, dupped);
+	unsigned int t;
+	ASSIGN_VAL(clar, t, 5);
 }
