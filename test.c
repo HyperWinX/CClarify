@@ -5,6 +5,9 @@ int main(){
 	Clarifier clar;
 	int dupped = dup(fileno(stdout));
 	init_loggerd(&clar, dupped);
-	unsigned int t;
-	ASSIGN_VAL(clar, t, 5);
+	unsigned int t = 666;
+	ASSIGN(clar, t, 5);
+	MSG(clar, "Bruh", INFO);
+	MSG(clar, "Bruh", WARNING);
+	MSG(clar, "Bruh", ERROR);
 }

@@ -35,66 +35,74 @@ int cclarify_stdout = 0;
 FILE* cclarify_fd;
 Output outmode;
 char* prompt = "==>";
+char* strings[] = {
+		"%s%s Assigning value \"%lu\" to %s, old value: %lu%s\n",
+		"%s%s Assigning value \"%ld\" to %s, old value: %ld%s\n",
+		"%s%s Assigning value \"%lf\" to %s, old value: %lf%s\n",
+		"%s%s Assigning value \"%s\" to %s, old value: %s%s\n",
+		"%s%s Assigning value \"%p\" to %s, old value: %s%s\n"
+};
 
 void log_write(char* msg, MsgType type);
 
 // Functions
+char* ul_dummy(){return strings[0];}
+char* dl_dummy(){return strings[1];}
+char* lf_dummy(){return strings[2];}
+char* s_dummy(){return strings[3];}
+char* vp_dummy(){return strings[4];}
+char* getcol(MsgType type){
+	switch (type){
+		case INFO:
+			return CGREEN;
+		case WARNING:
+			return CYELLOW;
+		case ERROR:
+			return CRED;
+	}
+}
 void write_buf(Clarifier* obj, char* msg, MsgType type){
-	write(obj->cclarify_stdout, msg, strlen(msg));
+	write(obj->cclarify_stdout, getcol(type), 5);     write(obj->cclarify_stdout, msg, strlen(msg));
+    write(obj->cclarify_stdout, CRESET, 1);
 }
 void write_fd(Clarifier* obj, char* msg, MsgType type){
 	fprintf(obj->cclarify_fd, "%s", msg);
 }
 
 void write_all(Clarifier* obj, char* msg, MsgType type){
+	write(obj->cclarify_stdout, getcol(type), 5);
 	write(obj->cclarify_stdout, msg, strlen(msg));
+	write(obj->cclarify_stdout, CRESET, 1);
 	fprintf(obj->cclarify_fd, "%s", msg);
 }
 
 #define GLOBAL_INIT() \
-		char buffer[512] = {0}
-#define CLEARBUF() memset(buffer, 0x00, strlen(buffer))
-#define ASSIGN_VAL(obj, var, val) \
-		_Generic((var), \
-		uint8_t: unsigned_assign, \
-		uint16_t: unsigned_assign, \
-		uint32_t: unsigned_assign, \
-		uint64_t: unsigned_assign, \
-		int8_t: signed_assign, \
-		int16_t: signed_assign, \
-		int32_t: signed_assign, \
-		int64_t: signed_assign, \
-		float: float_assign, \
-		double: double_assign, \
-		char*: charp_assign, \
-		void*: voidp_assign)(obj, var, #var, val, buffer)
-
-void unsigned_assign(Clarifier obj, uint64_t var, char* strvar, uint64_t val, char* buffer) {
-		snprintf(buffer, 512, "%s%s Assigning value \"%lu\" to %s, old value: %lu%s\n", CGREEN, prompt, (uint64_t)val, strvar, var, CRESET);
-		log_write(buffer, INFO);
-		var = val;
+		char cclarify_buffer[512] = {0}; \
+		char cclarify_col = 0; \
+		char* cclarify_str = 0;
+#define CLEARBUF() memset(cclarify_buffer, 0x00, strlen(cclarify_buffer))
+#define ASSIGN(obj, var, val) \
+		cclarify_str = _Generic(var, \
+						uint8_t: ul_dummy, \
+						uint16_t: ul_dummy, \
+						uint32_t: ul_dummy, \
+						uint64_t: ul_dummy, \
+						int8_t: dl_dummy, \
+						int16_t: dl_dummy, \
+						int32_t: dl_dummy, \
+						int64_t: dl_dummy, \
+						float: lf_dummy, \
+						double: lf_dummy, \
+						char*: s_dummy, \
+						void*: vp_dummy)(); \
+		snprintf(cclarify_buffer, sizeof(cclarify_buffer), cclarify_str, CGREEN, prompt, val, #var, var, CRESET); \
+		obj.write(&obj, cclarify_buffer, INFO); \
 		CLEARBUF();
-}
+#define MSG(obj, msg, type) \
+		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s %s\n", prompt, msg); \
+		obj.write(&obj, cclarify_buffer, type); \
+		CLEARBUF();
 
-void signed_assign(Clarifier obj, int64_t var, char* strvar, int64_t val, char* buffer){ }
-
-void float_assign(Clarifier obj, float var, char* strvar, float val, char* buffer){ }
-
-void double_assign(Clarifier obj, double var, char* strvar, double val, char* buffer){ }
-
-void charp_assign(Clarifier obj, char* var, char* strvar, char* val, char* buffer){ }
-
-void voidp_assign(Clarifier obj, void* var, char* strvar, void* val, char* buffer){ }
-
-void log_write(char* msg, MsgType type){
-	switch(type){
-		case INFO:
-			write(cclarify_stdout, msg, strlen(msg));
-			break;
-		case ERROR:
-			break;
-	}
-}
 void init_loggerd(Clarifier* obj, int descriptor){
 	obj->outmode = STDOUTO;
 	obj->cclarify_stdout = descriptor;
