@@ -50,14 +50,14 @@ char* assign_strings[] = {
 };
 
 char* display_strings[] = {
-	"%s Variable %s value: \"%u\"\n",
-	"%s Variable %s value: \"%lu\"\n",
-	"%s Variable %s value: \"%d\"\n",
-	"%s Variable %s value: \"%ld\"\n",
-	"%s Variable %s value: \"%f\"\n",
-	"%s Variable %s value: \"%lf\"\n",
-	"%s Variable %s value: \"%s\"\n",
-	"%s Variable %s value: \"%p\"\n"
+	"%s Variable \"%s\" value: \"%u\"\n",
+	"%s Variable \"%s\" value: \"%lu\"\n",
+	"%s Variable \"%s\" value: \"%d\"\n",
+	"%s Variable \"%s\" value: \"%ld\"\n",
+	"%s Variable \"%s\" value: \"%f\"\n",
+	"%s Variable \"%s\" value: \"%lf\"\n",
+	"%s Variable \"%s\" value: \"%s\"\n",
+	"%s Variable \"%s\" value: \"%p\"\n"
 };
 
 void log_write(char* msg, MsgType type);
@@ -139,12 +139,12 @@ void write_data(Clarifier* restrict clar, char* restrict buffer, size_t size, Ms
 	var = val; \
 	CLEARBUF();
 #define EXEC(obj, func) \
-	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Starting execution of function %s\n", prompt, #func); \
+	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Starting execution of function \"%s\"\n", prompt, #func); \
 	obj.write(&obj, cclarify_buffer, INFO); \
 	cclarify_depth++; \
 	CLEARBUF(); \
 	func; \
-	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Execution of function %s finished\n", prompt, #func); \
+	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Execution of function \"%s\" finished\n", prompt, #func); \
 	obj.write(&obj, cclarify_buffer, INFO); \
 	cclarify_depth--; \
 	CLEARBUF();
@@ -169,20 +169,22 @@ void write_data(Clarifier* restrict clar, char* restrict buffer, size_t size, Ms
 	write_data(&obj, cclarify_buffer, sizeof(cclarify_buffer), INFO, cclarify_str, prompt, #var, var); \
 	CLEARBUF();
 
-
-void init_loggerd(Clarifier* obj, int descriptor){
+#define init_loggerd(obj, desc) _init_loggerd(&obj, desc);
+void _init_loggerd(Clarifier* obj, int descriptor){
 	obj->outmode = STDOUTO;
 	obj->cclarify_stdout = descriptor;
 	obj->write = &write_buf;
 }
 
-void init_loggerf(Clarifier* obj, FILE* fd){
+#define init_loggerf(obj, fd) _init_loggerd(&obj, fd);
+void _init_loggerf(Clarifier* obj, FILE* fd){
 	obj->outmode = FILEO;
 	obj->cclarify_fd = fd;
 	obj->write = &write_fd;
 }
 
-void init_loggerfd(Clarifier* obj, int descriptor, FILE* fd){
+#define init_loggerfd(obj, desc, fd) _init_loggerfd(&obj, desc, fd);
+void _init_loggerfd(Clarifier* obj, int descriptor, FILE* fd){
 	obj->outmode = ALL;
 	obj->cclarify_stdout = descriptor;
 	obj->cclarify_fd = fd;

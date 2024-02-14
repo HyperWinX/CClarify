@@ -7,7 +7,7 @@ int main(){
 	GLOBAL_INIT();
 	Clarifier clar;
 	int dupped = dup(fileno(stdout));
-	init_loggerd(&clar, dupped);
+	init_loggerd(clar, dupped);
 	uint64_t t = 666;
 	ASSIGN(clar, t, 5);
 	MSG(clar, "Bruh", INFO);
