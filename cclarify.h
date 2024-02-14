@@ -32,15 +32,16 @@ typedef struct Clarifier{
 
 // Variables
 int cclarify_stdout = 0;
+int cclarify_depth = 0;
 FILE* cclarify_fd;
 Output outmode;
 char* prompt = "==>";
 char* strings[] = {
-		"%s%s Assigning value \"%lu\" to %s, old value: %lu%s\n",
-		"%s%s Assigning value \"%ld\" to %s, old value: %ld%s\n",
-		"%s%s Assigning value \"%lf\" to %s, old value: %lf%s\n",
-		"%s%s Assigning value \"%s\" to %s, old value: %s%s\n",
-		"%s%s Assigning value \"%p\" to %s, old value: %s%s\n"
+		"%s Assigning value \"%lu\" to %s, old value: %lu\n",
+		"%s Assigning value \"%ld\" to %s, old value: %ld\n",
+		"%s Assigning value \"%lf\" to %s, old value: %lf\n",
+		"%s Assigning value \"%s\" to %s, old value: %s\n",
+		"%s Assigning value \"%p\" to %s, old value: %p\n"
 };
 
 void log_write(char* msg, MsgType type);
@@ -62,8 +63,9 @@ char* getcol(MsgType type){
 	}
 }
 void write_buf(Clarifier* obj, char* msg, MsgType type){
-	write(obj->cclarify_stdout, getcol(type), 5);     write(obj->cclarify_stdout, msg, strlen(msg));
-    write(obj->cclarify_stdout, CRESET, 1);
+	write(obj->cclarify_stdout, getcol(type), 5);
+    write(obj->cclarify_stdout, msg, strlen(msg));
+	write(obj->cclarify_stdout, CRESET, 1);
 }
 void write_fd(Clarifier* obj, char* msg, MsgType type){
 	fprintf(obj->cclarify_fd, "%s", msg);
@@ -74,6 +76,14 @@ void write_all(Clarifier* obj, char* msg, MsgType type){
 	write(obj->cclarify_stdout, msg, strlen(msg));
 	write(obj->cclarify_stdout, CRESET, 1);
 	fprintf(obj->cclarify_fd, "%s", msg);
+}
+
+void write_data(Clarifier* clar, char* buffer, size_t size, MsgType type, char* format, ...){
+	va_list args;
+	va_start(args, format);
+	vsnprintf(buffer, size, format, args);
+	clar->write(clar, buffer, type);
+	va_end(args);
 }
 
 #define GLOBAL_INIT() \
@@ -95,9 +105,20 @@ void write_all(Clarifier* obj, char* msg, MsgType type){
 						double: lf_dummy, \
 						char*: s_dummy, \
 						void*: vp_dummy)(); \
-		snprintf(cclarify_buffer, sizeof(cclarify_buffer), cclarify_str, CGREEN, prompt, val, #var, var, CRESET); \
-		obj.write(&obj, cclarify_buffer, INFO); \
+		write_data(&obj, cclarify_buffer, sizeof(cclarify_buffer), INFO, cclarify_str, prompt, val, #var, var); \
+		var = val; \
 		CLEARBUF();
+#define EXEC(obj, func) \
+		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Starting execution of function %s\n", prompt, #func); \
+		obj.write(&obj, cclarify_buffer, INFO); \
+		cclarify_depth++; \
+		CLEARBUF(); \
+		func; \
+		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Execution of function %s finished\n", prompt, #func); \
+		obj.write(&obj, cclarify_buffer, INFO); \
+		cclarify_depth--; \
+		CLEARBUF();
+
 #define MSG(obj, msg, type) \
 		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s %s\n", prompt, msg); \
 		obj.write(&obj, cclarify_buffer, type); \

@@ -1,5 +1,8 @@
 #include "cclarify.h"
 
+void func(){}
+int func_assign(){return 1;}
+
 int main(){
 	GLOBAL_INIT();
 	Clarifier clar;
@@ -10,4 +13,7 @@ int main(){
 	MSG(clar, "Bruh", INFO);
 	MSG(clar, "Bruh", WARNING);
 	MSG(clar, "Bruh", ERROR);
+	EXEC(clar, func());
+	MSG(clar, "Lets assign function return value to variable!", INFO);
+	ASSIGN(clar, t, func_assign());
 }
