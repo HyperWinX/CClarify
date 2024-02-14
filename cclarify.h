@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdarg.h>
 
 // Some useful macroses
 #define CRED     "\x1b[31m"
@@ -36,22 +38,50 @@ int cclarify_depth = 0;
 FILE* cclarify_fd;
 Output outmode;
 char* prompt = "==>";
-char* strings[] = {
-		"%s Assigning value \"%lu\" to %s, old value: %lu\n",
-		"%s Assigning value \"%ld\" to %s, old value: %ld\n",
-		"%s Assigning value \"%lf\" to %s, old value: %lf\n",
-		"%s Assigning value \"%s\" to %s, old value: %s\n",
-		"%s Assigning value \"%p\" to %s, old value: %p\n"
+char* assign_strings[] = {
+	"%s Assigning value \"%u\" to %s, old value: %u",
+	"%s Assigning value \"%lu\" to %s, old value: %lu\n",
+	"%s Assigning value \"%d\" to %s, old value: %d\n",
+	"%s Assigning value \"%ld\" to %s, old value: %ld\n",
+	"%s Assigning value \"%f\" to %s, old value: %f\n",
+	"%s Assigning value \"%lf\" to %s, old value: %lf\n",
+	"%s Assigning value \"%s\" to %s, old value: %s\n",
+	"%s Assigning value \"%p\" to %s, old value: %p\n"
+};
+
+char* display_strings[] = {
+	"%s Variable %s value: \"%u\"\n",
+	"%s Variable %s value: \"%lu\"\n",
+	"%s Variable %s value: \"%d\"\n",
+	"%s Variable %s value: \"%ld\"\n",
+	"%s Variable %s value: \"%f\"\n",
+	"%s Variable %s value: \"%lf\"\n",
+	"%s Variable %s value: \"%s\"\n",
+	"%s Variable %s value: \"%p\"\n"
 };
 
 void log_write(char* msg, MsgType type);
 
 // Functions
-char* ul_dummy(){return strings[0];}
-char* dl_dummy(){return strings[1];}
-char* lf_dummy(){return strings[2];}
-char* s_dummy(){return strings[3];}
-char* vp_dummy(){return strings[4];}
+// Dummies
+char* u_dummy_assign(){return assign_strings[0];}
+char* lu_dummy_assign(){return assign_strings[1];}
+char* d_dummy_assign(){return assign_strings[2];}
+char* ld_dummy_assign(){return assign_strings[3];}
+char* f_dummy_assign(){return assign_strings[4];}
+char* lf_dummy_assign(){return assign_strings[5];}
+char* s_dummy_assign(){return assign_strings[6];}
+char* vp_dummy_assign(){return assign_strings[7];}
+
+char* u_dummy_display(){return display_strings[0];}
+char* lu_dummy_display(){return display_strings[1];}
+char* d_dummy_display(){return display_strings[2];}
+char* ld_dummy_display(){return display_strings[3];}
+char* f_dummy_display(){return display_strings[4];}
+char* lf_dummy_display(){return display_strings[5];}
+char* s_dummy_display(){return display_strings[6];}
+char* vp_dummy_display(){return display_strings[7];}
+
 char* getcol(MsgType type){
 	switch (type){
 		case INFO:
@@ -87,42 +117,58 @@ void write_data(Clarifier* restrict clar, char* restrict buffer, size_t size, Ms
 }
 
 #define GLOBAL_INIT() \
-		char cclarify_buffer[512] = {0}; \
-		char cclarify_col = 0; \
-		char* cclarify_str = 0;
+	char cclarify_buffer[512] = {0}; \
+	char cclarify_col = 0; \
+	char* cclarify_str = 0;
 #define CLEARBUF() memset(cclarify_buffer, 0x00, strlen(cclarify_buffer))
 #define ASSIGN(obj, var, val) \
-		cclarify_str = _Generic(var, \
-						uint8_t: ul_dummy, \
-						uint16_t: ul_dummy, \
-						uint32_t: ul_dummy, \
-						uint64_t: ul_dummy, \
-						int8_t: dl_dummy, \
-						int16_t: dl_dummy, \
-						int32_t: dl_dummy, \
-						int64_t: dl_dummy, \
-						float: lf_dummy, \
-						double: lf_dummy, \
-						char*: s_dummy, \
-						void*: vp_dummy)(); \
-		write_data(&obj, cclarify_buffer, sizeof(cclarify_buffer), INFO, cclarify_str, prompt, val, #var, var); \
-		var = val; \
-		CLEARBUF();
+	cclarify_str = _Generic(var, \
+		uint8_t: u_dummy_assign, \
+		uint16_t: u_dummy_assign, \
+		uint32_t: u_dummy_assign, \
+		uint64_t: lu_dummy_assign, \
+		int8_t: d_dummy_assign, \
+		int16_t: d_dummy_assign, \
+		int32_t: d_dummy_assign, \
+		int64_t: ld_dummy_assign, \
+		float: f_dummy_assign, \
+		double: lf_dummy_assign, \
+		char*: s_dummy_assign, \
+		void*: vp_dummy_assign)(); \
+	write_data(&obj, cclarify_buffer, sizeof(cclarify_buffer), INFO, cclarify_str, prompt, val, #var, var); \
+	var = val; \
+	CLEARBUF();
 #define EXEC(obj, func) \
-		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Starting execution of function %s\n", prompt, #func); \
-		obj.write(&obj, cclarify_buffer, INFO); \
-		cclarify_depth++; \
-		CLEARBUF(); \
-		func; \
-		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Execution of function %s finished\n", prompt, #func); \
-		obj.write(&obj, cclarify_buffer, INFO); \
-		cclarify_depth--; \
-		CLEARBUF();
-
+	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Starting execution of function %s\n", prompt, #func); \
+	obj.write(&obj, cclarify_buffer, INFO); \
+	cclarify_depth++; \
+	CLEARBUF(); \
+	func; \
+	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s Execution of function %s finished\n", prompt, #func); \
+	obj.write(&obj, cclarify_buffer, INFO); \
+	cclarify_depth--; \
+	CLEARBUF();
 #define MSG(obj, msg, type) \
-		snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s %s\n", prompt, msg); \
-		obj.write(&obj, cclarify_buffer, type); \
-		CLEARBUF();
+	snprintf(cclarify_buffer, sizeof(cclarify_buffer), "%s %s\n", prompt, msg); \
+	obj.write(&obj, cclarify_buffer, type); \
+	CLEARBUF();
+#define DISPLAY(obj, var) \
+	cclarify_str = _Generic(var, \
+		uint8_t: u_dummy_display, \
+		uint16_t: u_dummy_display, \
+		uint32_t: u_dummy_display, \
+		uint64_t: lu_dummy_display, \
+		int8_t: d_dummy_display, \
+		int16_t: d_dummy_display, \
+		int32_t: d_dummy_display, \
+		int64_t: ld_dummy_display, \
+		float: f_dummy_display, \
+		double: lf_dummy_display, \
+		char*: s_dummy_display, \
+		void*: vp_dummy_display)(); \
+	write_data(&obj, cclarify_buffer, sizeof(cclarify_buffer), INFO, cclarify_str, prompt, #var, var); \
+	CLEARBUF();
+
 
 void init_loggerd(Clarifier* obj, int descriptor){
 	obj->outmode = STDOUTO;
