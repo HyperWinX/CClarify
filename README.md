@@ -34,7 +34,7 @@
 CClarify is a small framework for creating advanced logging system. It can write to your custom descriptor, pointing to buffer, and can save everything to file, if you set it to do so.
 
 ## Installation
-1. Download main header [cclarify.h]("cclarify.h")
+1. Download main header [cclarify.h](cclarify.h)
 2. Include it to your source file, where you want to add logging
 3. Now you should set up everything.
 ```c
