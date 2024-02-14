@@ -8,7 +8,8 @@ int main(){
 	Clarifier clar;
 	int dupped = dup(fileno(stdout));
 	init_loggerd(&clar, dupped);
-	unsigned int t = 666;
+	uint64_t t = 666;
+	printf("%d\n", t);
 	ASSIGN(clar, t, 5);
 	MSG(clar, "Bruh", INFO);
 	MSG(clar, "Bruh", WARNING);
@@ -16,4 +17,5 @@ int main(){
 	EXEC(clar, func());
 	MSG(clar, "Lets assign function return value to variable!", INFO);
 	ASSIGN(clar, t, func_assign());
+	printf("%d\n", t);
 }

@@ -78,7 +78,7 @@ void write_all(Clarifier* obj, char* msg, MsgType type){
 	fprintf(obj->cclarify_fd, "%s", msg);
 }
 
-void write_data(Clarifier* clar, char* buffer, size_t size, MsgType type, char* format, ...){
+void write_data(Clarifier* restrict clar, char* restrict buffer, size_t size, MsgType type, char* restrict format, ...){
 	va_list args;
 	va_start(args, format);
 	vsnprintf(buffer, size, format, args);
