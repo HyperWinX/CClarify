@@ -8,6 +8,7 @@ int main(){
 	Clarifier clar;
 	int dupped = dup(fileno(stdout));
 	init_loggerd(clar, dupped);
+	SET_DEFAULT(clar);
 	uint64_t t = 666;
 	ASSIGN(clar, t, 5);
 	MSG(clar, "Bruh", INFO);
@@ -17,4 +18,12 @@ int main(){
 	MSG(clar, "Lets assign function return value to variable!", INFO);
 	ASSIGN(clar, t, func_assign());
 	DISPLAY(clar, t);
+	void* ptr1 = malloc(16);
+	void* ptr2 = calloc(16, 1);
+	ptr1 = realloc(ptr1, 32);
+	free(ptr1);
+	free(ptr2);
+	FILE* fd = fopen("/dev/null", "rb");
+	char buf[16];
+	fread(buf, 1, 16, fd);
 }
