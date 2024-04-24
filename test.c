@@ -23,7 +23,10 @@ int main(){
 	ptr1 = realloc(ptr1, 32);
 	free(ptr1);
 	free(ptr2);
-	FILE* fd = fopen("/dev/null", "rb");
+	FILE* fd = fopen("testfile", "rw");
 	char buf[16];
+	fwrite(buf, 1, 16, fd);
+	rewind(fd);
 	fread(buf, 1, 16, fd);
+	fclose(fd);
 }

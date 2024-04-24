@@ -202,7 +202,7 @@ void __real_free(void*);
 
 FILE* __real_fopen(const char*,const char*);
 size_t __real_fread(void* restrict,size_t,size_t,FILE* restrict);
-
+size_t __real_fwrite(const void* restrict buffer, size_t size, size_t count, FILE* restrict stream);
 void* __wrap_malloc(size_t size){
 	char cclarify_buffer[128];
 	char buf[64];
@@ -288,4 +288,23 @@ size_t __wrap_fread(void* restrict buffer, size_t size, size_t count, FILE* rest
 	snprintf(buf, sizeof(buf), "Successful fread() call, buf=%p, size=%ld, count=%ld, fd=%p", buf, size, count, stream);
 	MSG(cclarify_default, buf, INFO);
 	return read;
+}
+
+size_t __wrap_fwrite(const void* restrict buffer, size_t size, size_t count, FILE* restrict stream){
+	char cclarify_buffer[128];
+	char buf[128];
+	if (!size || !count){
+		snprintf(buf, sizeof(buf), "Fwrite() was called with size=%ld, count=%ld, nothing to do", size, count);
+		MSG(cclarify_default, buf, INFO);
+		return 0;
+	}
+	size_t wrote = __real_fwrite(buffer, size, count, stream);
+	if (!wrote){
+		snprintf(buf, sizeof(buf), "Failed fwrite() call, nothing written. Buf=%p, size=%ld, count=%ld, stream=%ld", buf, size, count, stream);
+		MSG(cclarify_default, buf, INFO);
+	} else {
+		snprintf(buf, sizeof(buf), "Successful fwrite() call, buf=%p, size=%ld, count=%ld, stream=%p", buf, size, count, stream);
+		MSG(cclarify_default, buf, INFO);
+	}
+	return wrote;
 }
