@@ -29,6 +29,7 @@
     - [Exec](#exec)
     - [Msg](#msg)
     - [Display](#display)
+- [Wrappers](#wrappers)
 
 # About CClarify
 CClarify is a small framework for creating advanced logging system. It can write to your custom descriptor, pointing to buffer, and can save everything to file, if you set it to do so.
@@ -94,3 +95,13 @@ and you will get something like:
 ```
 ==> Variable "variable" value: "420"
 ```
+
+## Wrappers
+In last update i've added wrappers for some glibc functions, like malloc. You can enable my variant of them by passing `--wrap=func` to linker. Currently available functions:  
+- malloc()
+- calloc()
+- realloc()
+- free()
+- fopen()
+- fread()
+- fwrite()
