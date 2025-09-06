@@ -33,7 +33,12 @@ struct Clarifier {
 };
 // Internals
 extern struct Clarifier __clar_default_fmt;
-
+extern void __clar_log(
+    struct Clarifier* clar,
+    enum __clar_loglevel loglevel,
+    const char* fmt,
+    va_list* args
+);
 // API
 inline struct Clarifier clar_create_logger(
     enum __clar_loglevel level,
@@ -74,32 +79,146 @@ inline void clar_set_format(const char* restrict fmt) {
 #define __CLAR_INIT2(arg) \
   __clar_default_fmt.format = strdup(arg);
 
-void clar_log(
+static inline void clar_log(
     enum __clar_loglevel loglevel,
     const char* restrict fmt,
-    ...);
+    ...) {
+  va_list args;
+  va_start(args, fmt);
 
-void clar_log_fd(
-    struct Clarifier clar,
-    const char* restrict fmt,
-    ...);
+  __clar_log(&__clar_default_fmt, loglevel, fmt, &args);
 
-void clar_debug(
+  va_end(args);
+}
+static inline void clar_log_with(
+    struct Clarifier* clar,
+    enum __clar_loglevel loglevel,
     const char* restrict fmt,
-    ...);
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
 
-void clar_info(
-    const char* restrict fmt,
-    ...);
+  __clar_log(&clar, loglevel, fmt, &args);
 
-void clar_warn(
-    const char* restrict fmt,
-    ...);
+  va_end(args);
+}
 
-void clar_err(
+static inline void clar_debug(
     const char* restrict fmt,
-    ...);
+    ...) {
+  va_list args;
+  va_start(args, fmt);
 
-void clar_fatal(
+  __clar_log(&__clar_default_fmt, CLAR_LOG_DEBUG, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_debug_with(
+    struct Clarifier* clar,
     const char* restrict fmt,
-    ...);
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(clar, CLAR_LOG_DEBUG, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_info(
+    const char* restrict fmt,
+    ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(&__clar_default_fmt, CLAR_LOG_INFO, fmt, &args);
+
+  va_end(args);
+}
+static inline void clar_info_with(
+    struct Clarifier* clar,
+    const char* restrict fmt,
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(clar, CLAR_LOG_DEBUG, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_warn(
+    const char* restrict fmt,
+    ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(&__clar_default_fmt, CLAR_LOG_WARNING, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_warn_with(
+    struct Clarifier* clar,
+    const char* restrict fmt,
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(clar, CLAR_LOG_WARNING, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_err(
+    const char* restrict fmt,
+    ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(&__clar_default_fmt, CLAR_LOG_ERROR, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_err_with(
+    struct Clarifier* clar,
+    const char* restrict fmt,
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(clar, CLAR_LOG_ERROR, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_fatal(
+    const char* restrict fmt,
+    ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(&__clar_default_fmt, CLAR_LOG_FATAL, fmt, &args);
+
+  va_end(args);
+}
+
+static inline void clar_fatal_with(
+    struct Clarifier* clar,
+    const char* restrict fmt,
+    ...
+    ) {
+  va_list args;
+  va_start(args, fmt);
+
+  __clar_log(clar, CLAR_LOG_FATAL, fmt, &args);
+
+  va_end(args);
+}

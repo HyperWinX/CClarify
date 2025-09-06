@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "cclarify.h"
 
@@ -14,7 +15,7 @@
 const char* __clar_descs[] = {
   "fatal",
   "error",
-  "warning",
+  "warn",
   "info",
   "debug"
 };
@@ -65,15 +66,38 @@ void __clar_format(
   }
 
   uint32_t offset = 0;
+  time_t cur_time = time(NULL);
+  struct tm* timeinfo = localtime(&cur_time);
 
   for (uint32_t i = 0; i < strlen(clar->format); ++i) {
     switch (clar->format[i]) {
       case '%':
         switch (clar->format[i + 1]) {
-          case 'S':
-            offset += vsnprintf(buf + offset, 0xFFFF, fmt, *args);
+          case 'Y':
+            offset += strftime(buf + offset, 0xFFFF, "%Y", timeinfo);
+            break;
+          case 'M':
+            offset += strftime(buf + offset, 0xFFFF, "%b", timeinfo);
             break;
           case 'd':
+            offset += strftime(buf + offset, 0xFFFF, "%a", timeinfo);
+            break;
+          case 'D':
+            offset += strftime(buf + offset, 0xFFFF, "%d", timeinfo);
+            break;
+          case 'H':
+            offset += strftime(buf + offset, 0xFFFF, "%H", timeinfo);
+            break;
+          case 'm':
+            offset += strftime(buf + offset, 0xFFFF, "%M", timeinfo);
+            break;
+          case 's':
+            offset += strftime(buf + offset, 0xFFFF, "%S", timeinfo);
+            break;
+          case 'l':
+            offset += vsnprintf(buf + offset, 0xFFFF, fmt, *args);
+            break;
+          case 'x':
             sputs(buf + offset, __clar_colors[(uint8_t)loglevel], &offset);
             sputs(buf + offset, __clar_descs[(uint8_t)loglevel], &offset);
             sputs(buf + offset, CRESET, &offset);
@@ -121,85 +145,11 @@ void clar_log(
     enum __clar_loglevel loglevel,
     const char* restrict fmt,
     ...
-    ) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, loglevel, fmt, &args);
-
-  va_end(args);
-}
-
-void clar_log_fd(
-    struct Clarifier clar,
-    const char* restrict fmt,
-    ...
-    ) {
-  va_list args;
-  va_start(args, fmt);
-  char* buf = alloca(__clar_get_fmt_size(fmt, &args) + 2048);
-  va_end(args);
-
-}
-
-void clar_debug(
-    const char* restrict fmt,
-    ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, CLAR_LOG_DEBUG, fmt, &args);
-
-  va_end(args);
-}
-
-void clar_info(
-    const char* restrict fmt,
-    ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, CLAR_LOG_INFO, fmt, &args);
-
-  va_end(args);
-}
-
-void clar_warn(
-    const char* restrict fmt,
-    ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, CLAR_LOG_WARNING, fmt, &args);
-
-  va_end(args);
-}
-
-void clar_err(
-    const char* restrict fmt,
-    ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, CLAR_LOG_ERROR, fmt, &args);
-
-  va_end(args);
-}
-
-void clar_fatal(
-    const char* restrict fmt,
-    ...) {
-  va_list args;
-  va_start(args, fmt);
-
-  __clar_log(&__clar_default_fmt, CLAR_LOG_FATAL, fmt, &args);
-
-  va_end(args);
-}
+);
 
 [[gnu::constructor]]
 void __clar_construct() {
-  __clar_default_fmt.format = strdup("[%d] %S");
+  __clar_default_fmt.format = strdup("%Y %M %d %D %H:%m:%s [%x] %l");
   __clar_default_fmt.loglevel = CLAR_LOG_DEBUG;
   __clar_default_fmt.logtarget.output_mask = CLAR_OUT_STDOUT;
 }
