@@ -7,12 +7,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// Some useful macroses
-#define CRED     "\x1b[31m"
-#define CGREEN   "\x1b[32m"
-#define CYELLOW  "\x1b[33m"
-#define CRESET   "\x1b[0m"
-
 //Structs and enums definitions
 enum __clar_loglevel : uint8_t {
   CLAR_LOG_FATAL = 0,
@@ -20,6 +14,11 @@ enum __clar_loglevel : uint8_t {
   CLAR_LOG_WARNING = 2,
   CLAR_LOG_INFO = 3,
   CLAR_LOG_DEBUG = 4
+};
+
+enum __clar_outputmask : uint8_t {
+  CLAR_OUT_STDOUT = (1 << 0),
+  CLAR_OUT_FILE =   (1 << 1)
 };
 
 struct __clar_logtarget {
@@ -32,11 +31,8 @@ struct Clarifier {
   struct __clar_logtarget logtarget;
   const char* format;
 };
-
-// Internal data
-extern const char* __clar_descs[];
-extern char* __clar_fmt;
-extern bool __clar_logging_enabled;
+// Internals
+extern struct Clarifier __clar_default_fmt;
 
 // API
 inline struct Clarifier clar_create_logger(
@@ -61,6 +57,14 @@ inline struct __clar_logtarget clar_create_logtarget(
   return target;
 }
 
+inline void clar_set_format(const char* restrict fmt) {
+  if (__clar_default_fmt.format) {
+    free(__clar_default_fmt.format);
+    __clar_default_fmt.format = NULL;
+  }
+  __clar_default_fmt.format = strdup(fmt);
+}
+
 #define __CLAR_EXPAND(x) x
 #define __CLAR_GET_MACRO(_1, name, ...) name
 #define CLAR_INIT(...) __CLAR_EXPAND(__CLAR_GET_MACRO(__VA_ARGS__, __CLAR_INIT2, __CLAR_INIT1)(__VA_ARGS__))
@@ -68,39 +72,34 @@ inline struct __clar_logtarget clar_create_logtarget(
 #define __CLAR_INIT1() 
 
 #define __CLAR_INIT2(arg) \
-  __clar_fmt = strdup(arg);
+  __clar_default_fmt.format = strdup(arg);
 
 void clar_log(
     enum __clar_loglevel loglevel,
     const char* restrict fmt,
-    ...
-    ) {
-  va_list args;
-  va_start(args, fmt);
+    ...);
 
-  if (!__clar_fmt) {
-    vprintf(fmt, args);
-    return;
-  }
-  for (uint32_t i = 0; i < strlen(__clar_fmt); ++i) {
-    switch (__clar_fmt[i]) {
-      case '%':
-        switch (__clar_fmt[i + 1]) {
-          case 'S':
-            vprintf(fmt, args);
-            break;
-          case 'd':
-            fputs(__clar_descs[(uint8_t)loglevel], stdout);
-            break;
-          case '%':
-            putchar('%');
-            break;
-        }
-        ++i;
-        break;
-      default:
-        putchar(__clar_fmt[i]);
-        break;
-    }
-  }
-}
+void clar_log_fd(
+    struct Clarifier clar,
+    const char* restrict fmt,
+    ...);
+
+void clar_debug(
+    const char* restrict fmt,
+    ...);
+
+void clar_info(
+    const char* restrict fmt,
+    ...);
+
+void clar_warn(
+    const char* restrict fmt,
+    ...);
+
+void clar_err(
+    const char* restrict fmt,
+    ...);
+
+void clar_fatal(
+    const char* restrict fmt,
+    ...);
