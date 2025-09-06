@@ -40,7 +40,7 @@ extern void __clar_log(
     va_list* args
 );
 // API
-inline struct Clarifier clar_create_logger(
+static inline struct Clarifier clar_create_logger(
     enum __clar_loglevel level,
     struct __clar_logtarget target,
     const char* fmt  
@@ -48,7 +48,7 @@ inline struct Clarifier clar_create_logger(
   return (struct Clarifier){ level, target, fmt };
 }
 
-inline struct __clar_logtarget clar_create_logtarget(
+static inline struct __clar_logtarget clar_create_logtarget(
     const char* filename,
     uint8_t outmask
     ) {
@@ -62,12 +62,12 @@ inline struct __clar_logtarget clar_create_logtarget(
   return target;
 }
 
-inline void clar_set_format(const char* restrict fmt) {
-  if (__clar_default_fmt.format) {
-    free(__clar_default_fmt.format);
-    __clar_default_fmt.format = NULL;
-  }
-  __clar_default_fmt.format = strdup(fmt);
+static inline void clar_set_global_format(const char* restrict fmt) {
+  __clar_default_fmt.format = fmt;
+}
+
+static inline void clar_set_global_loglevel(enum __clar_loglevel loglevel) {
+  __clar_default_fmt.loglevel = loglevel;
 }
 
 #define __CLAR_EXPAND(x) x

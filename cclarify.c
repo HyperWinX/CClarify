@@ -59,7 +59,8 @@ void __clar_format(
     enum __clar_loglevel loglevel,
     char* buf,
     char* fmt,
-    va_list* args
+    va_list* args,
+    bool colors
     ) {
   if (!clar) {
     clar = &__clar_default_fmt;
@@ -98,9 +99,13 @@ void __clar_format(
             offset += vsnprintf(buf + offset, 0xFFFF, fmt, *args);
             break;
           case 'x':
-            sputs(buf + offset, __clar_colors[(uint8_t)loglevel], &offset);
-            sputs(buf + offset, __clar_descs[(uint8_t)loglevel], &offset);
-            sputs(buf + offset, CRESET, &offset);
+            if (colors) {
+              sputs(buf + offset, __clar_colors[(uint8_t)loglevel], &offset);
+              sputs(buf + offset, __clar_descs[(uint8_t)loglevel], &offset);
+              sputs(buf + offset, CRESET, &offset);
+            } else {
+              sputs(buf + offset, __clar_descs[(uint8_t)loglevel], &offset);
+            }
             break;
           case '%':
           default:
@@ -123,6 +128,9 @@ void __clar_log(
     const char* fmt,
     va_list* args
     ) {
+  if (loglevel > clar->loglevel) {
+    return;
+  }
   uint32_t sz = __clar_get_fmt_size(fmt, args) + 2048;
   char* buf = alloca(sz);
   if (!buf) {
@@ -130,14 +138,14 @@ void __clar_log(
   }
   memset(buf, 0x00, sz);
 
-  __clar_format(clar, loglevel, buf, fmt, args);
-
   if (clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
+    __clar_format(clar, loglevel, buf, fmt, args, true);
     fputs(buf, stdout);
   }
   if (clar->logtarget.output_mask & CLAR_OUT_FILE &&
       clar->logtarget.file) {
-    fwrite(buf, 1, sz, clar->logtarget.file);
+    __clar_format(clar, loglevel, buf, fmt, args, false);
+    fwrite(buf, 1, strlen(buf), clar->logtarget.file);
   }
 }
 
@@ -149,14 +157,8 @@ void clar_log(
 
 [[gnu::constructor]]
 void __clar_construct() {
-  __clar_default_fmt.format = strdup("%Y %M %d %D %H:%m:%s [%x] %l");
+  __clar_default_fmt.format = "%Y %M %d %D %H:%m:%s [%x] %l";
   __clar_default_fmt.loglevel = CLAR_LOG_DEBUG;
   __clar_default_fmt.logtarget.output_mask = CLAR_OUT_STDOUT;
 }
 
-[[gnu::destructor]]
-void __clar_destruct() {
-  if (__clar_default_fmt.format) {
-    free(__clar_default_fmt.format);
-  }
-}
