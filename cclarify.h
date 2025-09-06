@@ -26,26 +26,26 @@ struct __clar_logtarget {
   uint8_t output_mask;
 };
 
-struct Clarifier {
+struct clarifier {
   enum __clar_loglevel loglevel;
   struct __clar_logtarget logtarget;
   const char* format;
 };
 // Internals
-extern struct Clarifier __clar_default_fmt;
+extern struct clarifier __clar_default_fmt;
 extern void __clar_log(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     enum __clar_loglevel loglevel,
     const char* fmt,
     va_list* args
 );
 // API
-static inline struct Clarifier clar_create_logger(
+static inline struct clarifier clar_create_logger(
     enum __clar_loglevel level,
     struct __clar_logtarget target,
     const char* fmt  
     ) {
-  return (struct Clarifier){ level, target, fmt };
+  return (struct clarifier){ level, target, fmt };
 }
 
 static inline struct __clar_logtarget clar_create_logtarget(
@@ -55,11 +55,19 @@ static inline struct __clar_logtarget clar_create_logtarget(
   struct __clar_logtarget target;
   target.file = fopen(filename, "w");
   if (!target.file) {
-    printf("Failed to open file %s to log", filename);
-    abort();
+    printf("[[cclarify]] Failed to open file %s to log", filename);
   }
   target.output_mask = outmask;
   return target;
+}
+
+static inline void clar_destroy_logger(struct clarifier* clar) {
+  if (clar->logtarget.file) {
+    fclose(clar->logtarget.file);
+    clar->logtarget.file = NULL;
+  }
+  clar->logtarget.output_mask = 0;
+  clar->format = NULL;
 }
 
 static inline void clar_set_global_format(const char* restrict fmt) {
@@ -70,6 +78,10 @@ static inline void clar_set_global_loglevel(enum __clar_loglevel loglevel) {
   __clar_default_fmt.loglevel = loglevel;
 }
 
+static inline void clar_set_global_logger(struct clarifier* clar) {
+  memcpy(&__clar_default_fmt, clar, sizeof(clarifier));
+}
+
 #define __CLAR_EXPAND(x) x
 #define __CLAR_GET_MACRO(_1, name, ...) name
 #define CLAR_INIT(...) __CLAR_EXPAND(__CLAR_GET_MACRO(__VA_ARGS__, __CLAR_INIT2, __CLAR_INIT1)(__VA_ARGS__))
@@ -77,7 +89,7 @@ static inline void clar_set_global_loglevel(enum __clar_loglevel loglevel) {
 #define __CLAR_INIT1() 
 
 #define __CLAR_INIT2(arg) \
-  __clar_default_fmt.format = strdup(arg);
+  __clar_default_fmt.format = arg;
 
 static inline void clar_log(
     enum __clar_loglevel loglevel,
@@ -91,7 +103,7 @@ static inline void clar_log(
   va_end(args);
 }
 static inline void clar_log_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     enum __clar_loglevel loglevel,
     const char* restrict fmt,
     ...
@@ -116,7 +128,7 @@ static inline void clar_debug(
 }
 
 static inline void clar_debug_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     const char* restrict fmt,
     ...
     ) {
@@ -139,7 +151,7 @@ static inline void clar_info(
   va_end(args);
 }
 static inline void clar_info_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     const char* restrict fmt,
     ...
     ) {
@@ -163,7 +175,7 @@ static inline void clar_warn(
 }
 
 static inline void clar_warn_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     const char* restrict fmt,
     ...
     ) {
@@ -187,7 +199,7 @@ static inline void clar_err(
 }
 
 static inline void clar_err_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     const char* restrict fmt,
     ...
     ) {
@@ -211,7 +223,7 @@ static inline void clar_fatal(
 }
 
 static inline void clar_fatal_with(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     const char* restrict fmt,
     ...
     ) {

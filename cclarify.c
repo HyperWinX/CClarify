@@ -28,7 +28,7 @@ const char* __clar_colors[] = {
   CRESET
 };
 
-struct Clarifier __clar_default_fmt;
+struct clarifier __clar_default_fmt;
 
 char* __clar_fmt = NULL;
 char* __clar_buf = NULL;
@@ -55,7 +55,7 @@ void sputs(
 
 [[gnu::visibility("hidden")]]
 uint32_t __clar_format(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     enum __clar_loglevel loglevel,
     char* buf,
     char* fmt,
@@ -124,7 +124,7 @@ uint32_t __clar_format(
 }
 
 void __clar_log(
-    struct Clarifier* clar,
+    struct clarifier* clar,
     enum __clar_loglevel loglevel,
     const char* fmt,
     va_list* args
