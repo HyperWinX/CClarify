@@ -54,7 +54,7 @@ void sputs(
 }
 
 [[gnu::visibility("hidden")]]
-void __clar_format(
+uint32_t __clar_format(
     struct Clarifier* clar,
     enum __clar_loglevel loglevel,
     char* buf,
@@ -120,6 +120,7 @@ void __clar_format(
     }
   }
   buf[offset++] = '\n';
+  return offset;
 }
 
 void __clar_log(
@@ -144,8 +145,8 @@ void __clar_log(
   }
   if (clar->logtarget.output_mask & CLAR_OUT_FILE &&
       clar->logtarget.file) {
-    __clar_format(clar, loglevel, buf, fmt, args, false);
-    fwrite(buf, 1, strlen(buf), clar->logtarget.file);
+    uint32_t size = __clar_format(clar, loglevel, buf, fmt, args, false);
+    fwrite(buf, 1, size, clar->logtarget.file);
   }
 }
 
