@@ -38,7 +38,8 @@ class pkgRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
-        tc.variables["CMAKE_C_STANDARD"] = self.options.std.value
+        print(self.options.std.value)
+        tc.variables["CMAKE_C_STANDARD"] = str(self.options.std.value)
         tc.variables["CMAKE_C_STANDARD_REQUIRED"] = "ON"
         tc.generate()
 
