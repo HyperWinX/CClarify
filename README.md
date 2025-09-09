@@ -27,7 +27,8 @@
 - [Usage](#usage)
   - [Loglevels](#loglevels)
   - [Formatting rules](#formatting-rules)
-  - [Global formatter](#global-formatter-api)
+  - [Global formatter API](#global-formatter-api)
+  - [Using custom loggers](#using-custom-loggers)
 
 
 # About CClarify
@@ -73,8 +74,41 @@ If you will set loglevel to **CLAR_LOG_WARNING**, all log calls with priority lo
 
 `void clar_set_global_loglevel(__clar_loglevel loglevel)` - Sets global loglevel.
 
-`void clar_log(__clar_loglevel loglevel, const char* fmt, ...)` - Uses global formatter and ged loglevel to log.
+`void clar_log(__clar_loglevel loglevel, const char* fmt, ...)` - Uses global logger and provided loglevel to log.
 
-`void formattter and **CLAR_LOG_DEBUG** loglevel to log.
+`void clar_debug(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_DEBUG** loglevel to log.
 
-`void clar_info(__clar_loglevel loglevel, 
+`void clar_info(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_INFO** loglevel to log.
+
+`void clar_warn(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_WARNING** loglevel to log.
+
+`void clar_error(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_ERROR** loglevel to log.
+
+`void clar_fatal(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_FATAL** loglevel to log.
+
+### Using custom loggers
+
+#### Create custom logger:
+```
+struct clarifier clar = clar_create_logger(CLAR_LOG_DEBUG, clar_create_logtarget("test.log", CLAR_OUT_STDOUT | CLAR_OUT_FILE), "[%x] %l");
+```
+What we are doing here:
+- Create logger with **CLAR_LOG_DEBUG** loglevel
+- With logtarget:
+  - Write to file test.log
+  - Write to both file and stdout, i. e. terminal
+- With formatting string "[%x] %l"
+
+#### How to use:
+`void clar_log_with(struct clarifier* clar, __clar_loglevel loglevel, const char* fmt, ...)` - Uses custom logger and provided loglevel to log.
+
+`void clar_debug(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_DEBUG** loglevel to log.
+
+`void clar_info(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_INFO** loglevel to log.
+
+`void clar_warn(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_WARNING** loglevel to log.
+
+`void clar_error(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_ERROR** loglevel to log.
+
+`void clar_fatal(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_FATAL** loglevel to log.
+
