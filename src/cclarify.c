@@ -2,10 +2,11 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-#include "cclarify.h"
+#include "cclarify/cclarify.h"
 
 #define CRED     "\x1b[31m"
 #define CYELLOW  "\x1b[33m"
@@ -58,7 +59,7 @@ uint32_t __clar_format(
     struct clarifier* clar,
     enum __clar_loglevel loglevel,
     char* buf,
-    char* fmt,
+    const char* fmt,
     va_list* args,
     bool colors
     ) {
@@ -146,6 +147,44 @@ void __clar_log(
   if (clar->logtarget.output_mask & CLAR_OUT_FILE &&
       clar->logtarget.file) {
     uint32_t size = __clar_format(clar, loglevel, buf, fmt, args, false);
+    if (clar->logtarget.max_size != 0 && clar->logtarget.cur_size + size > clar->logtarget.max_size) {
+      uint16_t len = strlen(clar->logtarget.filename);
+      char* buf1 = alloca(len + 8); // Enough for suffix
+      char* buf2 = alloca(len + 8);
+      fclose(clar->logtarget.file);
+      clar->logtarget.file = NULL;
+      clar->logtarget.cur_size = 0;
+      for (int32_t i = clar->logtarget.max_files - 1; i >= 0; --i) {
+        switch (i) {
+        case 0:
+          clar->logtarget.file = fopen(clar->logtarget.filename, "w");
+          if (!clar->logtarget.file && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
+            __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to open log file!", NULL, true);
+            fputs(buf, stdout);
+            return;
+          }
+          break;
+        case 1:
+          snprintf(buf1, len + 8, "%s.%d", clar->logtarget.filename, i);
+          if (rename(clar->logtarget.filename, buf1) && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
+            __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to rotate logs!", NULL, true);
+            fputs(buf, stdout);
+            return;
+          }
+          break;
+        default:
+          snprintf(buf1, len + 8, "%s.%d", clar->logtarget.filename, i);
+          snprintf(buf2, len + 8, "%s.%d", clar->logtarget.filename, i - 1);
+          if (rename(buf2, buf1) && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
+            __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to rotate logs!", NULL, true);
+            fputs(buf, stdout);
+            return;
+          }
+          break;
+        }
+      }
+    }
+    clar->logtarget.cur_size += size;
     fwrite(buf, 1, size, clar->logtarget.file);
   }
 }
@@ -156,10 +195,14 @@ void clar_log(
     ...
 );
 
-[[gnu::constructor]]
+[[gnu::constructor, gnu::visibility("hidden")]]
 void __clar_construct() {
   __clar_default_fmt.format = "%Y %M %d %D %H:%m:%s [%x] %l";
   __clar_default_fmt.loglevel = CLAR_LOG_DEBUG;
   __clar_default_fmt.logtarget.output_mask = CLAR_OUT_STDOUT;
 }
 
+[[gnu::destructor, gnu::visibility("hidden")]]
+void __clar_destroy() {
+
+}
