@@ -1,9 +1,7 @@
-#include <__stdarg_va_list.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 #include "cclarify/cclarify.h"
