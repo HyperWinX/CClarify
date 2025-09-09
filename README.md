@@ -67,6 +67,14 @@ If you will set loglevel to **CLAR_LOG_WARNING**, all log calls with priority lo
 | %  | Inserts a single percent too - if the next character is not a valid format specifier    |
 
 ### Global formatter API
-`clar_set_global_rotation(const char* filename, uint16_t max_files, uint32_t max_file_size)` - Enables log rotation when you enabled global output to file. Max file size is set in bytes!
+`void clar_set_global_rotation(const char* filename, uint16_t max_files, uint32_t max_file_size)` - Enables log rotation when you enabled global output to file. Max file size is set in bytes.
 
-`clar_set_global_format(const char* fmf)` - Sets global format string. Notice, that this isstrinriclsricls.
+`void clar_set_global_format(const char* fmt)` - Sets global format string. Notice, that this is NOT a format string, that is used by libc's *printf functions! See [formatting rules](#formatting-rules) for more.
+
+`void clar_set_global_loglevel(__clar_loglevel loglevel)` - Sets global loglevel.
+
+`void clar_log(__clar_loglevel loglevel, const char* fmt, ...)` - Uses global formatter and ged loglevel to log.
+
+`void formattter and **CLAR_LOG_DEBUG** loglevel to log.
+
+`void clar_info(__clar_loglevel loglevel, 
