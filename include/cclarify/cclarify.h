@@ -79,7 +79,7 @@ static inline void clar_destroy_logtarget(struct clarifier* clar) {
   if (clar->logtarget.file) {
     fclose(clar->logtarget.file);
   }
-  memset(&clar->logtarget, '\0', sizeof(__clar_logtarget));
+  memset(&clar->logtarget, '\0', sizeof(struct __clar_logtarget));
 }
 
 static inline void clar_set_global_rotation(const char* filename, uint16_t max_file_count, uint32_t max_size) {
