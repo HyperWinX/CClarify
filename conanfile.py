@@ -16,8 +16,9 @@ class pkgRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
-    default_options = {"shared": False, "fPIC": True}
+    languages = "C"
+    options = {"shared": [True, False], "fPIC": [True, False], "std": [99, 11, 17, 23]}
+    default_options = {"shared": False, "fPIC": True, "std": 17}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*"
@@ -37,6 +38,8 @@ class pkgRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
+        tc.variables["CMAKE_C_STANDARD"] = self.options.std.value
+        tc.variables["CMAKE_C_STANDARD_REQUIRED"] = "ON"
         tc.generate()
 
     def build(self):
