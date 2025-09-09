@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Install conan
-        uses: turtlebrowser/get-conan@main
+        uses: conan-io/setup-conan@v1
 
       - name: Checkout code
         uses: actions/checkout@v4
