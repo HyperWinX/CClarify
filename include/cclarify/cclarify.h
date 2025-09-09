@@ -1,7 +1,5 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
