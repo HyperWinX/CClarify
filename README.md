@@ -25,72 +25,48 @@
 - [About project](#about-cclarify)
 - [Installation](#installation)
 - [Usage](#usage)
-    - [Assign](#assign)
-    - [Exec](#exec)
-    - [Msg](#msg)
-    - [Display](#display)
+  - [Loglevels](#loglevels)
+  - [Formatting rules](#formatting-rules)
+  - [Global formatter](#global-formatter-api)
+
 
 # About CClarify
-CClarify is a small framework for creating advanced logging system. It can write to your custom descriptor, pointing to buffer, and can save everything to file, if you set it to do so.
+CClarify is a small logging library, written in pure C, that doesn't use any heap memory.
 
 ## Installation
-1. Download main header [cclarify.h](cclarify.h)
-2. Include it to your source file, where you want to add logging
-3. Now you should set up everything.
-```c
-GLOBAL_INIT(); // Init logger variables
-Clarifier clar; // Create logger object
-// If you have int descriptor like stdout
-init_loggerd(clar, descriptor);
-
-// If you want it to write logs to file
-init_loggerf(clar, fd);
-
-// If you want it to write logs to both destinations
-init_loggerfd(clar, descriptor, fd);
+If you use **Conan**, add the the package:
 ```
-4. You are good to go now!
+hyper-cclarify/<version>
+```
+You can choose a version in **Releases** tab.
+
 ## Usage
-### Assign
-If you want to assign some value to variable (custom types are not supported) you should do this:
-```c
-ASSIGN(clar, variable, value);
-```
-It will output something like:
-```
-==> Assigning value "value" to "variable", old value: "old_var_val"
-```
-### Exec
-If you wanna execute some function, and signal if function started or stopped, do this:
-```c
-EXEC(clar, function());
-```
-It will notify you about started execution:
-```
-==> Starting execution of function "function()"
-```
-And about end of function execution.
-```
-==> Execution of function "function()" finished
-```
+### Loglevels
+CClarify has the following loglevels:
+- **CLAR_LOG_DEBUG**
+- **CLAR_LOG_INFO**
+- **CLAR_LOG_WARNING**
+- **CLAR_LOG_ERROR**
+- **CLAR_LOG_FATAL**
 
-### Msg
-To display some king of message, you need just to use MSG() function.
-```c
-// To display green info message, do this
-MSG(clar, "Hello World!", INFO);
-// Yellow - warning
-MSG(clar, "Warning", WARNING);
-// Red - error
-MSG(clar, "Error", ERROR);
-```
+**Example**:
+If you will set loglevel to **CLAR_LOG_WARNING**, all log calls with priority lower than this (i. e. **CLAR_LOG_INFO** and **CLAR_LOG_DEBUG**) won't print anything at all.
 
-### Display
-Sometimes you want just to display variable value. Do this:
-```c
-DISPLAY(clar, variable);
-```
-and you will get something like:
-```
-==> Variable "variable" value: "420"
-```
+### Formatting rules
+| %Y | Insert current year (for example, **2025**)                                             |
+|----|-----------------------------------------------------------------------------------------|
+| %M | Insert abbreviated month name (for example, **Sep**)                                    |
+| %d | Insert abbreviated day of week name (for example, **Mon**)                              |
+| %D | Insert day of month as a decimal (for example, **09**)                                  |
+| %H | Insert hour as a decimal (for example, **13**)                                          |
+| %m | Insert minute as a decimal (for example, **32**)                                        |
+| %s | Insert second as a decifuncleuncal (for example, **47**)                                        |
+| %l | Insert formatted string from log() call                                                 |
+| %x | Inserts message, specific to current loglevel (applying colors, if writing to terminal) |
+| %% | Inserts a single percent                                                                |
+| %  | Inserts a single percent too - if the next character is not a valid format specifier    |
+
+### Global formatter API
+`clar_set_global_rotation(const char* filename, uint16_t max_files, uint32_t max_file_size)` - Enables log rotation when you enabled global output to file. Max file size is set in bytes!
+
+`clar_set_global_format(const char* fmf)` - Sets global format string. Notice, that this isstrinriclsricls.
