@@ -2,29 +2,22 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 
-class pkgRecipe(ConanFile):
+class CCLarifyRecipe(ConanFile):
     name = "cclarify"
     version = "0.1"
     package_type = "library"
 
-    # Optional metadata
     license = "GPLv3"
     author = "HyperWinX"
     url = "https://github.com/HyperWinX/CClarify.git"
     description = "Small and powerful logging library for C applications"
     topics = ("c", "logging")
 
-    # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    languages = "C"
     options = {"shared": [True, False], "fPIC": [True, False], "std": [99, 11, 17, 23]}
     default_options = {"shared": False, "fPIC": True, "std": 17}
 
-    # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*"
-
-    def requirements(self):
-        self.tested_reference_str = "cclarify/0.1"
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -41,7 +34,6 @@ class pkgRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
-        print(self.options.std.value)
         tc.variables["CMAKE_C_STANDARD"] = str(self.options.std.value)
         tc.variables["CMAKE_C_STANDARD_REQUIRED"] = "ON"
         tc.generate()
@@ -51,15 +43,10 @@ class pkgRecipe(ConanFile):
         cmake.configure()
         cmake.build()
 
-    def test(self):
-        if can_run(self):
-            cmd = os.path.join(self.cpp.build.bindir, "cclarify-tests")
-            self.run(cmd, env="conanrun")
-
     def package(self):
         cmake = CMake(self)
         cmake.install()
 
     def package_info(self):
-        self.cpp_info.libs = ["mypkg"]
+        self.cpp_info.libs = ["cclarify"]
 
