@@ -23,6 +23,9 @@ class pkgRecipe(ConanFile):
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "src/*", "include/*"
 
+    def requirements(self):
+        self.tested_reference_str = "cclarify/0.1"
+
     def config_options(self):
         if self.settings.os == "Windows":
             self.options.rm_safe("fPIC")
@@ -47,6 +50,11 @@ class pkgRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+
+    def test(self):
+        if can_run(self):
+            cmd = os.path.join(self.cpp.build.bindir, "cclarify-tests")
+            self.run(cmd, env="conanrun")
 
     def package(self):
         cmake = CMake(self)

@@ -33,7 +33,6 @@ char* __clar_fmt = NULL;
 char* __clar_buf = NULL;
 bool __clar_logging_enabled = true;
 
-[[gnu::visibility("hidden")]]
 uint32_t __clar_get_fmt_size(
     const char* restrict fmt,
     va_list* args
@@ -41,7 +40,6 @@ uint32_t __clar_get_fmt_size(
   return vsnprintf(NULL, 0, fmt, *args);
 }
 
-[[gnu::visibility("hidden")]]
 void sputs(
     char* buf,
     const char* src,
@@ -52,7 +50,6 @@ void sputs(
   *offset += len;
 }
 
-[[gnu::visibility("hidden")]]
 uint32_t __clar_format(
     struct clarifier* clar,
     enum __clar_loglevel loglevel,
@@ -193,14 +190,14 @@ void clar_log(
     ...
 );
 
-[[gnu::constructor, gnu::visibility("hidden")]]
+[[gnu::constructor]]
 void __clar_construct() {
   __clar_default_fmt.format = "%Y %M %d %D %H:%m:%s [%x] %l";
   __clar_default_fmt.loglevel = CLAR_LOG_DEBUG;
   __clar_default_fmt.logtarget.output_mask = CLAR_OUT_STDOUT;
 }
 
-[[gnu::destructor, gnu::visibility("hidden")]]
+[[gnu::destructor]]
 void __clar_destroy() {
-
+  clar_destroy_logger(&__clar_default_fmt);
 }

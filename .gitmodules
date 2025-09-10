@@ -1,0 +1,3 @@
+[submodule "dist/munit"]
+	path = dist/munit
+	url = https://github.com/nemequ/munit
