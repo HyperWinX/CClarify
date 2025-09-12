@@ -25,83 +25,101 @@
 - [About project](#about-cclarify)
 - [Installation](#installation)
 - [Usage](#usage)
-    - [Assign](#assign)
-    - [Exec](#exec)
-    - [Msg](#msg)
-    - [Display](#display)
-- [Wrappers](#wrappers)
+  - [Quickstart](#quickstart)
+  - [Loglevels](#loglevels)
+  - [Formatting rules](#formatting-rules)
+  - [Global formatter API](#global-formatter-api)
+  - [Using custom loggers](#using-custom-loggers)
 
 # About CClarify
-CClarify is a small framework for creating advanced logging system. It can write to your custom descriptor, pointing to buffer, and can save everything to file, if you set it to do so.
+CClarify is a small logging library, written in pure C, that doesn't use any heap memory.
 
 ## Installation
-1. Download main header [cclarify.h](cclarify.h)
-2. Include it to your source file, where you want to add logging
-3. Now you should set up everything.
-```c
-GLOBAL_INIT(); // Init logger variables
-Clarifier clar; // Create logger object
-// If you have int descriptor like stdout
-init_loggerd(clar, descriptor);
-
-// If you want it to write logs to file
-init_loggerf(clar, fd);
-
-// If you want it to write logs to both destinations
-init_loggerfd(clar, descriptor, fd);
+If you use **Conan**, add the the package:
 ```
-4. You are good to go now!
+hyper-cclarify/<version>
+```
+You can choose a version in **Releases** tab.
+
 ## Usage
-### Assign
-If you want to assign some value to variable (custom types are not supported) you should do this:
+### Quickstart
+If you don't need all these fancy things, you can just start logging - it will work!
 ```c
-ASSIGN(clar, variable, value);
-```
-It will output something like:
-```
-==> Assigning value "value" to "variable", old value: "old_var_val"
-```
-### Exec
-If you wanna execute some function, and signal if function started or stopped, do this:
-```c
-EXEC(clar, function());
-```
-It will notify you about started execution:
-```
-==> Starting execution of function "function()"
-```
-And about end of function execution.
-```
-==> Execution of function "function()" finished
+#include "cclarify.h"
+
+int main() {
+    clar_info("Program is running");
+}
 ```
 
-### Msg
-To display some king of message, you need just to use MSG() function.
-```c
-// To display green info message, do this
-MSG(clar, "Hello World!", INFO);
-// Yellow - warning
-MSG(clar, "Warning", WARNING);
-// Red - error
-MSG(clar, "Error", ERROR);
+### Loglevels
+CClarify has the following loglevels:
+- **CLAR_LOG_DEBUG**
+- **CLAR_LOG_INFO**
+- **CLAR_LOG_WARNING**
+- **CLAR_LOG_ERROR**
+- **CLAR_LOG_FATAL**
+
+**Example**:
+If you will set loglevel to **CLAR_LOG_WARNING**, all log calls with priority lower than this (i. e. **CLAR_LOG_INFO** and **CLAR_LOG_DEBUG**) won't print anything at all.
+
+### Formatting rules
+| %Y | Insert current year (for example, **2025**)                                             |
+|----|-----------------------------------------------------------------------------------------|
+| %M | Insert abbreviated month name (for example, **Sep**)                                    |
+| %d | Insert abbreviated day of week name (for example, **Mon**)                              |
+| %D | Insert day of month as a decimal (for example, **09**)                                  |
+| %H | Insert hour as a decimal (for example, **13**)                                          |
+| %m | Insert minute as a decimal (for example, **32**)                                        |
+| %s | Insert second as a decifuncleuncal (for example, **47**)                                        |
+| %l | Insert formatted string from log() call                                                 |
+| %x | Inserts message, specific to current loglevel (applying colors, if writing to terminal) |
+| %% | Inserts a single percent                                                                |
+| %  | Inserts a single percent too - if the next character is not a valid format specifier    |
+
+### Global formatter API
+`void clar_set_global_rotation(const char* filename, uint16_t max_files, uint32_t max_file_size)` - Enables log rotation when you enabled global output to file. Max file size is set in bytes.
+
+`void clar_set_global_format(const char* fmt)` - Sets global format string. Notice, that this is NOT a format string, that is used by libc's *printf functions! See [formatting rules](#formatting-rules) for more.
+
+`void clar_set_global_loglevel(__clar_loglevel loglevel)` - Sets global loglevel.
+
+`void clar_log(__clar_loglevel loglevel, const char* fmt, ...)` - Uses global logger and provided loglevel to log.
+
+`void clar_debug(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_DEBUG** loglevel to log.
+
+`void clar_info(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_INFO** loglevel to log.
+
+`void clar_warn(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_WARNING** loglevel to log.
+
+`void clar_error(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_ERROR** loglevel to log.
+
+`void clar_fatal(const char* fmt, ...)` - Uses global logger and **CLAR_LOG_FATAL** loglevel to log.
+
+### Using custom loggers
+
+#### Create custom logger:
+```
+struct clarifier clar = clar_create_logger(CLAR_LOG_DEBUG, clar_create_logtarget("test.log", CLAR_OUT_STDOUT | CLAR_OUT_FILE), "[%x] %l");
 ```
 
-### Display
-Sometimes you want just to display variable value. Do this:
-```c
-DISPLAY(clar, variable);
-```
-and you will get something like:
-```
-==> Variable "variable" value: "420"
-```
+What we are doing here:
+- Create logger with **CLAR_LOG_DEBUG** loglevel
+- With logtarget:
+  - Write to file test.log
+  - Write to both file and stdout, i. e. terminal
+- With formatting string "[%x] %l"
 
-## Wrappers
-In last update i've added wrappers for some glibc functions, like malloc. You can enable my variant of them by passing `--wrap=func` to linker. Currently available functions:  
-- malloc()
-- calloc()
-- realloc()
-- free()
-- fopen()
-- fread()
-- fwrite()
+#### How to use:
+`void clar_log_with(struct clarifier* clar, __clar_loglevel loglevel, const char* fmt, ...)` - Uses custom logger and provided loglevel to log.
+
+`void clar_debug(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_DEBUG** loglevel to log.
+
+`void clar_info(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_INFO** loglevel to log.
+
+`void clar_warn(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_WARNING** loglevel to log.
+
+`void clar_error(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_ERROR** loglevel to log.
+
+`void clar_fatal(struct clarifier* clar, const char* fmt, ...)` - Uses custom logger and **CLAR_LOG_FATAL** loglevel to log.
+

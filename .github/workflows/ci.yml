@@ -1,0 +1,28 @@
+name: CClarify CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        std: [99, 11, 17, 23]
+        compiler: [gcc, clang]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install conan
+        uses: conan-io/setup-conan@v1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build & test
+        run: conan create . -o std=${{ matrix.std }} -s compiler=${{ matrix.compiler }} -s compiler.version=14 -s compiler.libcxx=libstdc++
