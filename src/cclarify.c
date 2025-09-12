@@ -115,7 +115,7 @@ uint32_t __clar_format(
         break;
     }
   }
-  buf[offset++] = '\n';
+  //buf[offset++] = '\n';
   return offset;
 }
 
@@ -138,10 +138,11 @@ void __clar_log(
   if (clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
     __clar_format(clar, loglevel, buf, fmt, args, true);
     fputs(buf, stdout);
+    fputc('\n', stdout);
   }
   if (clar->logtarget.output_mask & CLAR_OUT_FILE &&
       clar->logtarget.file) {
-    uint32_t size = __clar_format(clar, loglevel, buf, fmt, args, false);
+    uint32_t size = __clar_format(clar, loglevel, buf, fmt, args, false) + 1;
     if (clar->logtarget.max_size != 0 && clar->logtarget.cur_size + size > clar->logtarget.max_size) {
       uint16_t len = strlen(clar->logtarget.filename);
       char* buf1 = alloca(len + 8); // Enough for suffix
@@ -156,6 +157,7 @@ void __clar_log(
           if (!clar->logtarget.file && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
             __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to open log file!", NULL, true);
             fputs(buf, stdout);
+            fputc('\n', stdout);
             return;
           }
           break;
@@ -164,6 +166,7 @@ void __clar_log(
           if (rename(clar->logtarget.filename, buf1) && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
             __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to rotate logs!", NULL, true);
             fputs(buf, stdout);
+            fputc('\n', stdout);
             return;
           }
           break;
@@ -173,6 +176,7 @@ void __clar_log(
           if (rename(buf2, buf1) && clar->logtarget.output_mask & CLAR_OUT_STDOUT) {
             __clar_format(clar, CLAR_LOG_ERROR, buf, "[[cclarify]] Failed to rotate logs!", NULL, true);
             fputs(buf, stdout);
+            fputc('\n', stdout);
             return;
           }
           break;
@@ -181,6 +185,7 @@ void __clar_log(
     }
     clar->logtarget.cur_size += size;
     fwrite(buf, 1, size, clar->logtarget.file);
+    fputc('\n', clar->logtarget.file);
   }
 }
 

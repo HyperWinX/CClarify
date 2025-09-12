@@ -21,6 +21,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
-      - name: build
-        run: conan build . -o std=${{ matrix.std }}
+      - name: Build & test
+        run: conan create . -o std=${{ matrix.std }} -s compiler=${{ matrix.compiler }} -s compiler.version=14 -s compiler.libcxx=libstdc++

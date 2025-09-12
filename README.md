@@ -25,6 +25,7 @@
 - [About project](#about-cclarify)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Quickstart](#quickstart)
   - [Loglevels](#loglevels)
   - [Formatting rules](#formatting-rules)
   - [Global formatter API](#global-formatter-api)
@@ -42,6 +43,16 @@ hyper-cclarify/<version>
 You can choose a version in **Releases** tab.
 
 ## Usage
+### Quickstart
+If you don't need all these fancy things, you can just start logging - it will work!
+```c
+#include "cclarify.h"
+
+int main() {
+    clar_info("Program is running");
+}
+```
+
 ### Loglevels
 CClarify has the following loglevels:
 - **CLAR_LOG_DEBUG**

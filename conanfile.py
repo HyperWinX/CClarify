@@ -3,8 +3,8 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 
 class CCLarifyRecipe(ConanFile):
-    name = "cclarify"
-    version = "0.1"
+    name = "hyper-cclarify"
+    version = "1.0"
     package_type = "library"
 
     license = "GPLv3"
